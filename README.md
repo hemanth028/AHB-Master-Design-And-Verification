@@ -75,15 +75,15 @@ The design is split into three decoupled, modular RTL blocks coordinated by a to
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                  AHB Master Top                      │
+│                  AHB Master Top                     │
 │                                                     │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────┐  │
-│  │  Master FSM  │  │ Address Gen  │  │  Burst   │  │
-│  │              │◄─┤     Unit     │◄─┤Controller│  │
-│  │ IDLE→NONSEQ  │  │              │  │          │  │
-│  │ →SEQ→BUSY    │  │ Aligned Addr │  │ Beat Cnt │  │
-│  │ →ERROR       │  │ INCR / WRAP  │  │ Compl.   │  │
-│  └──────┬───────┘  └──────────────┘  └──────────┘  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────┐   │
+│  │  Master FSM  │  │ Address Gen  │  │  Burst   │   │
+│  │              │◄─┤     Unit     │◄─┤Controller│   │
+│  │ IDLE→NONSEQ  │  │              │  │          │   │
+│  │ →SEQ→BUSY    │  │ Aligned Addr │  │ Beat Cnt │   │
+│  │ →ERROR       │  │ INCR / WRAP  │  │ Compl.   │   │
+│  └──────┬───────┘  └──────────────┘  └──────────┘   │
 │         │                                           │
 │  ┌──────▼───────────────────────────────────────┐   │
 │  │               Data Path                      │   │
@@ -93,7 +93,7 @@ The design is split into three decoupled, modular RTL blocks coordinated by a to
 └─────────────────────────────────────────────────────┘
               │                     ▲
               ▼                     │
-        AHB Bus / Slave (DUT / BFM)
+           AHB Bus / Slave (DUT / BFM)
 ```
 
 **Key design decisions:**
@@ -121,29 +121,14 @@ The design is split into three decoupled, modular RTL blocks coordinated by a to
 | `HGRANT`  | Input     | 1      | Bus grant from arbiter                         |
 
 ---
-
-
-A custom **SystemVerilog** verification environment was built to functionally verify the AHB Master RTL. The environment follows a layered, component-based architecture with mailbox-based inter-component communication.
-
-### Components
-
-| Component           | Role                                                                         |
-|---------------------|------------------------------------------------------------------------------|
-| **Transaction**     | Object class representing a single AHB transfer with randomized fields       |
-| **Generator**       | Produces directed and randomized transaction sequences; drives the mailbox   |
-| **BFM (Bus Functional Model)** | Drives AHB slave-side signals; emulates a responsive AHB slave  |
-| **Monitor**         | Passively observes bus signals; captures and packages observed transactions  |
-| **Scoreboard**      | Compares expected vs. observed transactions; flags mismatches                |
-| **Mailbox**         | SV mailbox channels connecting Generator → BFM and Monitor → Scoreboard     |
-
 ### Verification Coverage
 
 | Test Scenario                    | Status  |
 |----------------------------------|---------|
 | Single write transaction         | ✅ Pass |
 | Single read transaction          | ✅ Pass |
-| INCR4 burst (write)              | ✅ Pass |
-| INCR8 burst (read)               | ✅ Pass |
+| INCR4 burst                      | ✅ Pass |
+| INCR8 burst                      | ✅ Pass |
 | INCR16 burst                     | ✅ Pass |
 | WRAP4 burst                      | ✅ Pass |
 | WRAP8 burst                      | ✅ Pass |
@@ -152,9 +137,7 @@ A custom **SystemVerilog** verification environment was built to functionally ve
 | Address sequencing (INCR)        | ✅ Pass |
 | Address wrapping (WRAP boundary) | ✅ Pass |
 | Write-data pipeline timing       | ✅ Pass |
-| HREADY wait-state insertion      | ✅ Pass |
+| HREADY wait-state insertion      | ✅ Pass |(with fixed values  of hready in bfm)
 | HRESP ERROR handling             | ✅ Pass |
-
-> Randomized stimulus was used alongside directed tests to improve scenario coverage. Protocol timing was validated using waveform analysis at each stage of development.
 
 
