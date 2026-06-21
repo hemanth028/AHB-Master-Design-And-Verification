@@ -14,21 +14,7 @@ This project presents a fully functional, configurable **AMBA AHB (Advanced High
 
 The design targets SoC and FPGA prototyping use cases where a compliant AHB master is required to initiate and manage data transfers over the AHB bus. The implementation follows AMBA AHB protocol concepts, supporting both read and write operations with single and burst transfer modes — including incrementing and wrapping burst types.
 
-The project was developed following a **verification-driven development** methodology, where the testbench was built alongside the RTL to catch protocol violations and corner cases early.
-
----
-
-## Table of Contents
-
-- [Features](#features)
-- [Architecture](#architecture)
-- [Protocol Signals](#protocol-signals)
-- [Repository Structure](#repository-structure)
-- [Verification Environment](#verification-environment)
-- [Simulation Results](#simulation-results)
-- [Applications](#applications)
-- [Future Improvements](#future-improvements)
-- [Skills Demonstrated](#skills-demonstrated)
+The project was developed following a **verification-driven development** methodology, where the testbench was built alongside the RTL to catch protocol violations and corner cases.
 
 ---
 
