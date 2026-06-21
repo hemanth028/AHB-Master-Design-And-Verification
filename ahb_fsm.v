@@ -1,0 +1,168 @@
+module ahb_master_fsm(
+    input wire hclk,
+    input wire hresetn,
+  //  input wire [31:0] haddr_in,
+    input wire burst_done,
+    input wire hgrant,
+    input wire [1:0] hresp,
+    input wire [2:0]hburst,
+    input wire [31:0] hrdata,
+    input wire hready,
+    input wire start,
+    input wire hwrite_in,
+    input wire [31:0] wr_data,
+
+    //output reg [31:0] haddr,
+    output reg hwrite,
+    output reg [1:0] htrans,
+    output reg[31:0] hwdata,
+    output reg [2:0] state,
+    output reg [2:0] next,
+	output reg [31:0] rd_data
+);
+
+localparam IDLE   = 3'b000;
+localparam NONSEQ = 3'b001;
+localparam SEQ    = 3'b010;
+localparam BUSY   = 3'b011;
+localparam ERROR  = 3'b100;
+localparam RESPOND= 3'b101;
+//reg [2:0] next;
+//reg [31:0] rd_data;
+reg [31:0] data_pipe;
+reg pipe_line;
+reg trans_end;
+always @(posedge hclk or negedge hresetn)
+begin
+    if(!hresetn)
+        state <= IDLE;
+    else
+        state <= next;
+end
+
+always @(*)begin
+    next = state;
+    case(state)
+        IDLE:begin
+            if(start && hgrant)
+                next = NONSEQ;
+        end
+       NONSEQ:begin
+         if(hresp == 2'b01)
+            next = ERROR;
+         else if(hready)begin
+            if(hburst == 3'b000)
+                next = IDLE;
+             else
+                next = SEQ;
+          end
+        end
+        SEQ:begin
+            if(hresp == 2'b01)
+                next = ERROR;
+//			else if(trans_end)
+//				next=RESPOND;
+            else if(hready)
+//				if(burst_done)
+//					trans_end=0;
+                next = burst_done ? IDLE : SEQ;
+			else if (!hready)
+				next=BUSY;
+        end
+        BUSY:begin
+            if(hready)
+                next = SEQ;
+        end
+        ERROR:begin
+            next = IDLE;
+        end
+//		RESPOND:begin
+//		end
+        default:begin
+            next = IDLE;
+        end
+    endcase
+end
+
+always @(posedge hclk or negedge hresetn)
+begin
+    if(!hresetn) begin
+     //   haddr <= 32'd0;
+      //  hwdata <= 32'd0;
+        hwrite <= 1'b0;
+        htrans <= 2'b00;
+        rd_data <= 32'd0;
+      //  fsm_state <= IDLE;
+    end
+    else begin
+        //fsm_state <= state;
+        case(state)
+            IDLE:begin
+                htrans <= 2'b00;
+                hwrite <= hwrite_in;
+				hwdata <=0;
+            end
+
+            NONSEQ: begin
+                htrans <= 2'b10;
+                if(hready)
+                        hwrite <= hwrite_in;
+                //if(hready)begin
+                 //   haddr <= haddr_in;
+                  //  if(!hwrite)
+                   //     hwdata <= wr_data;
+                   // else
+                      //  rd_data <= hrdata;
+                //end
+            end
+
+            SEQ:begin
+                htrans <= 2'b11;
+               // if(hready)begin
+                 //   haddr <= haddr_in;
+                   // if(hwrite)
+                   //     hwdata <= wr_data;
+                    //else
+                      //  rd_data <= hrdata;
+                //end
+            end
+
+            BUSY:
+                htrans <= 2'b01;
+
+            ERROR:
+                htrans <= 2'b00;
+        endcase
+    end
+end
+always @(posedge hclk or negedge hresetn)
+begin
+    if(!hresetn)
+        rd_data <= 0;
+    else if(hready && !hwrite &&
+            (state==NONSEQ || state==SEQ))
+        rd_data <= hrdata;
+end
+always @(posedge hclk or negedge hresetn)
+begin
+    if(pipe_line)begin
+        pipe_line<=0;
+        hwdata<=data_pipe;
+    end
+    if(!hresetn)
+        data_pipe <= 0;
+   if(hready && hwrite && (state==SEQ||state==NONSEQ))begin
+        data_pipe <= wr_data;
+        pipe_line<=1;
+    end 
+end
+//always @(posedge hclk or negedge hresetn)begin
+//	if(!hresetn)begin
+//		data_pipe<=0;
+//	end
+//	if(hready && hwrite && (state==SEQ||state==NONSEQ))begin
+//		data_pipe<=wr_data;
+//	end
+//end
+//assign hwdata = data_pipe;
+endmodule
