@@ -122,39 +122,6 @@ The design is split into three decoupled, modular RTL blocks coordinated by a to
 
 ---
 
-## Repository Structure
-
-```
-amba-ahb-master/
-│
-├── rtl/                          # Synthesizable RTL source files
-│   ├── ahb_master_top.v          # Top-level master wrapper
-│   ├── ahb_master_fsm.v          # AHB Master FSM (IDLE/NONSEQ/SEQ/BUSY/ERROR)
-│   ├── ahb_address_gen.v         # Address Generation Unit (aligned, INCR, WRAP)
-│   ├── ahb_burst_ctrl.v          # Burst Controller (beat counting, completion)
-│   └── ahb_data_path.v           # Data path (write pipeline, read capture)
-│
-├── tb/                           # Simulation testbench files
-│   ├── ahb_master_tb.sv          # Top-level testbench
-│   ├── ahb_bfm.sv                # Bus Functional Model (AHB slave BFM)
-│   └── ahb_tb_pkg.sv             # Package: parameters, types, utilities
-│
-├── verification/                 # Verification environment components
-│   ├── ahb_transaction.sv        # Transaction class (randomized stimulus object)
-│   ├── ahb_generator.sv          # Generator (drives random/directed sequences)
-│   ├── ahb_monitor.sv            # Monitor (observes bus and captures transactions)
-│   ├── ahb_scoreboard.sv         # Scoreboard (functional checking, comparison)
-│   └── ahb_env.sv                # Environment wrapper (connects all components)
-│
-└── docs/                         # Documentation and supporting material
-    ├── architecture.md           # Detailed architecture notes
-    ├── waveforms/                 # Annotated waveform screenshots
-    └── ahb_protocol_notes.md     # Protocol reference and design notes
-```
-
----
-
-## Verification Environment
 
 A custom **SystemVerilog** verification environment was built to functionally verify the AHB Master RTL. The environment follows a layered, component-based architecture with mailbox-based inter-component communication.
 
@@ -190,68 +157,4 @@ A custom **SystemVerilog** verification environment was built to functionally ve
 
 > Randomized stimulus was used alongside directed tests to improve scenario coverage. Protocol timing was validated using waveform analysis at each stage of development.
 
----
 
-## Simulation Results
-
-Simulation was performed using a SystemVerilog-compatible simulator. All test cases passed functional checking through the scoreboard.
-
-**Highlights:**
-- All burst types (INCR and WRAP, lengths 4/8/16) simulated and verified end-to-end.
-- Write data pipeline confirmed to be exactly one cycle behind the address phase per AHB specification.
-- Wrapping burst address generation verified to correctly roll over at computed wrap boundaries.
-- Wait-state handling (HREADY de-assertion) correctly stalls address and data phases without corrupting transfer.
-- HRESP ERROR response correctly triggers FSM transition to ERROR state and halts the transfer sequence.
-
-> Waveform screenshots and annotated timing diagrams are available under `docs/waveforms/`.
-
----
-
-## Applications
-
-AHB Masters are fundamental IP blocks found in virtually every digital SoC and embedded system:
-
-- **Microcontrollers** — CPU cores use AHB masters to access on-chip memory and peripherals over the internal bus fabric.
-- **System-on-Chip (SoC) Design** — Multiple masters (CPU, DMA, accelerators) share the AHB bus; each requires a compliant AHB master interface.
-- **RISC-V Based Systems** — Open-source RISC-V cores such as PicoRV32 and Ibex interface to AHB fabrics; this master can serve as an interfacing or reference block.
-- **FPGA Prototyping Platforms** — Used to prototype SoC bus interactions on Xilinx/Intel FPGAs before tape-out.
-- **Embedded Systems** — Arm Cortex-M series processors, widely used in embedded products, natively use AHB as their primary bus protocol.
-
----
-
-## Future Improvements
-
-The current implementation focuses on the master interface. Planned extensions include:
-
-- [ ] **Multi-master arbitration** — Implement an AHB arbiter and integrate `HGRANT`/`HBUSREQ` handshaking for multi-master environments
-- [ ] **AHB Interconnect / Bus Matrix** — Full crossbar supporting simultaneous master-slave transfers
-- [ ] **AHB Subordinate (Slave) Implementation** — Pair the master with a configurable AHB slave for end-to-end closed-loop simulation
-- [ ] **UVM-based Verification Environment** — Migrate the custom SV testbench to a full UVM methodology with agents, sequences, and sequencers
-- [ ] **Functional Coverage** — Add SystemVerilog covergroups and coverpoints to measure verification completeness
-- [ ] **Assertions (SVA)** — Bind SystemVerilog Assertions to the DUT for protocol-level formal checking
-- [ ] **AHB-to-APB Bridge** — Extend the system with an AHB-to-APB bridge to interface low-speed peripherals
-
----
-
-## Skills Demonstrated
-
-This project was developed as part of a hands-on VLSI / Digital Design portfolio, demonstrating the following competencies:
-
-| Skill Area                     | Details                                                                               |
-|--------------------------------|---------------------------------------------------------------------------------------|
-| **Verilog / SystemVerilog**    | RTL design in Verilog; verification environment in SystemVerilog                      |
-| **AMBA AHB Protocol**          | Deep understanding of AHB transfer types, burst modes, handshaking, and timing        |
-| **RTL Design**                 | Modular, parameterized design with clean FSM, datapath, and control separation        |
-| **Verification Methodology**   | Custom layered SV testbench; transaction-level modeling; scoreboard-based checking    |
-| **FPGA / SoC Design Concepts** | Target-aware design suitable for both FPGA prototyping and ASIC implementation flows  |
-| **Digital Design Debugging**   | Waveform-based timing analysis; FSM state tracing; pipeline behavior validation       |
-
----
-
-## License
-
-This project is intended for educational and portfolio purposes.
-
----
-
-*Designed and verified as part of an RTL / SoC design portfolio. Contributions, suggestions, and issue reports are welcome.*
